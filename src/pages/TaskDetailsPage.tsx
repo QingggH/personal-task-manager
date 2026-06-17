@@ -13,9 +13,9 @@ export function TaskDetailsPage() {
     return <Navigate to="/" replace />;
   }
 
-  const task = getTaskById(taskId);
+  const existingTask = getTaskById(taskId);
 
-  if (!task) {
+  if (!existingTask) {
     return (
       <section className="card empty-state">
         <h2>Task not found</h2>
@@ -26,6 +26,10 @@ export function TaskDetailsPage() {
       </section>
     );
   }
+
+  // Past the guard above the task is guaranteed to exist; aliasing it to a
+  // constant keeps the narrowed (non-undefined) type inside the handlers below.
+  const task = existingTask;
 
   function handleUpdate(values: TaskFormValues) {
     updateTask(task.id, values);

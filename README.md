@@ -47,6 +47,14 @@ npm run build
 - The app falls back to mock data if localStorage is empty or invalid
 - Editing happens on the details route so list and details pages both exist
 
+## Tech Choices
+
+- **TypeScript over plain JavaScript:** the brief's evaluation criteria include a
+  dedicated "Use of TypeScript" category and require typed components, props, and
+  state, so the project is written entirely in TypeScript (`.ts` / `.tsx`).
+- **React 18.3:** pinned to a current, stable React release that is fully
+  supported by the project's dependencies (React Router v6).
+
 ## Git Workflow Suggestion
 
 - `main` for stable code
