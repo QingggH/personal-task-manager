@@ -41,7 +41,7 @@ export function TaskDetailsPage() {
     <div className="page-stack">
       <section className="card detail-card">
         <div className="detail-card__header">
-          <div>
+          <div className="detail-card__content">
             <p className={`badge ${task.status}`}>{task.status}</p>
             <h2>{task.title}</h2>
             <p>{task.description}</p>
@@ -53,9 +53,9 @@ export function TaskDetailsPage() {
           </div>
         </div>
 
-        <div className="actions">
-          <Link className="secondary" to={isEditMode ? `/tasks/${task.id}` : `/tasks/${task.id}/edit`}>
-            {isEditMode ? 'View details' : 'Edit task'}
+        <div className="detail-card__actions">
+          <Link className="secondary" to={`/tasks/${task.id}/edit`}>
+            Edit
           </Link>
           <button className="danger" type="button" onClick={handleDelete}>
             Delete task
