@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import type { FormEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { FormEvent, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import type { TaskFormValues, TaskStatus } from '../types';
 
 interface TaskFormProps {
@@ -7,6 +7,9 @@ interface TaskFormProps {
   submitLabel: string;
   onSubmit: (values: TaskFormValues) => void;
   onCancel?: () => void;
+  inlineSubmitInStatusRow?: boolean;
+  confirmBeforeSubmit?: (values: TaskFormValues) => boolean;
+  resetAfterSubmit?: boolean;
 }
 
 const emptyValues: TaskFormValues = {
@@ -15,13 +18,45 @@ const emptyValues: TaskFormValues = {
   status: 'pending',
 };
 
-export function TaskForm({ initialValues, submitLabel, onSubmit, onCancel }: TaskFormProps) {
+export function TaskForm({
+  initialValues,
+  submitLabel,
+  onSubmit,
+  onCancel,
+  inlineSubmitInStatusRow = false,
+  confirmBeforeSubmit,
+  resetAfterSubmit = true,
+}: TaskFormProps) {
   const [values, setValues] = useState<TaskFormValues>(initialValues ?? emptyValues);
   const [error, setError] = useState('');
+  const [statusMenuOpen, setStatusMenuOpen] = useState(false);
+  const statusMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setValues(initialValues ?? emptyValues);
   }, [initialValues]);
+
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent) {
+      if (statusMenuRef.current && !statusMenuRef.current.contains(event.target as Node)) {
+        setStatusMenuOpen(false);
+      }
+    }
+
+    function handleEscape(event: globalThis.KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setStatusMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape as unknown as EventListener);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape as unknown as EventListener);
+    };
+  }, []);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -37,13 +72,19 @@ export function TaskForm({ initialValues, submitLabel, onSubmit, onCancel }: Tas
     }
 
     setError('');
-    onSubmit({
+    const nextValues = {
       title: values.title.trim(),
       description: values.description.trim(),
       status: values.status,
-    });
+    };
 
-    if (!initialValues) {
+    if (confirmBeforeSubmit && !confirmBeforeSubmit(nextValues)) {
+      return;
+    }
+
+    onSubmit(nextValues);
+
+    if (!initialValues && resetAfterSubmit) {
       setValues(emptyValues);
     }
   }
@@ -52,11 +93,22 @@ export function TaskForm({ initialValues, submitLabel, onSubmit, onCancel }: Tas
     setValues((current) => ({ ...current, [field]: value }));
   }
 
+  function selectStatus(status: TaskStatus) {
+    updateField('status', status);
+    setStatusMenuOpen(false);
+  }
+
+  function handleStatusTriggerKeyDown(event: ReactKeyboardEvent<HTMLButtonElement>) {
+    if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setStatusMenuOpen((current) => !current);
+    }
+  }
+
   return (
     <form className="card form" onSubmit={handleSubmit}>
       <div className="form-header">
         <h2>{submitLabel}</h2>
-        <p>Fill in the task details below.</p>
       </div>
 
       <label className="field">
@@ -81,16 +133,60 @@ export function TaskForm({ initialValues, submitLabel, onSubmit, onCancel }: Tas
         />
       </label>
 
-      <label className="field">
+      <div className="field field--status">
         <span>Status</span>
-        <select
-          value={values.status}
-          onChange={(event) => updateField('status', event.target.value as TaskStatus)}
-        >
-          <option value="pending">Pending</option>
-          <option value="completed">Completed</option>
-        </select>
-      </label>
+        <div className="status-row">
+          <div className="status-picker" ref={statusMenuRef}>
+            <button
+              className={`status-trigger badge ${values.status}`}
+              type="button"
+              aria-haspopup="listbox"
+              aria-expanded={statusMenuOpen}
+              onClick={() => setStatusMenuOpen((current) => !current)}
+              onKeyDown={handleStatusTriggerKeyDown}
+            >
+              <span>{values.status === 'pending' ? 'Pending' : 'Completed'}</span>
+              <span className="status-trigger__chevron" aria-hidden="true">
+                ▾
+              </span>
+            </button>
+
+            {statusMenuOpen ? (
+              <div className="status-menu" role="listbox" aria-label="Task status">
+                <button
+                  type="button"
+                  className={`status-option ${values.status === 'pending' ? 'active' : ''}`}
+                  onClick={() => selectStatus('pending')}
+                >
+                  <span className="status-dot pending" aria-hidden="true" />
+                  Pending
+                </button>
+                <button
+                  type="button"
+                  className={`status-option ${values.status === 'completed' ? 'active' : ''}`}
+                  onClick={() => selectStatus('completed')}
+                >
+                  <span className="status-dot completed" aria-hidden="true" />
+                  Completed
+                </button>
+              </div>
+            ) : null}
+          </div>
+
+          {inlineSubmitInStatusRow ? (
+            <div className="status-actions">
+              <button className="primary status-submit" type="submit">
+                {submitLabel}
+              </button>
+              {onCancel ? (
+                <button className="secondary status-cancel" type="button" onClick={onCancel}>
+                  Cancel
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
 
       {error ? (
         <p className="error" role="alert">
@@ -98,16 +194,18 @@ export function TaskForm({ initialValues, submitLabel, onSubmit, onCancel }: Tas
         </p>
       ) : null}
 
-      <div className="actions">
-        <button className="primary" type="submit">
-          {submitLabel}
-        </button>
-        {onCancel ? (
-          <button className="secondary" type="button" onClick={onCancel}>
-            Cancel
+      {!inlineSubmitInStatusRow ? (
+        <div className="actions">
+          <button className="primary" type="submit">
+            {submitLabel}
           </button>
-        ) : null}
-      </div>
+          {onCancel ? (
+            <button className="secondary" type="button" onClick={onCancel}>
+              Cancel
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </form>
   );
 }

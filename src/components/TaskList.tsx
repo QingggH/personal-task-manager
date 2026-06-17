@@ -24,22 +24,22 @@ export function TaskList({ tasks, onToggleStatus, onDelete }: TaskListProps) {
           <div className="task-card__header">
             <div>
               <p className={`badge ${task.status}`}>{task.status}</p>
-              <h2>{task.title}</h2>
+              <h2 className="task-card__title">{task.title}</h2>
             </div>
-            <Link className="text-link" to={`/tasks/${task.id}`}>
-              View details
-            </Link>
           </div>
 
           <p className="task-card__description">{task.description}</p>
 
-          <div className="task-card__actions">
-            <button className="secondary" type="button" onClick={() => onToggleStatus(task.id)}>
-              Mark as {task.status === 'pending' ? 'completed' : 'pending'}
-            </button>
+          <div className="task-card__actions task-card__actions--stacked">
+            <Link className="secondary" to={`/tasks/${task.id}`}>
+              View details
+            </Link>
             <Link className="secondary" to={`/tasks/${task.id}/edit`}>
               Edit
             </Link>
+            <button className="secondary" type="button" onClick={() => onToggleStatus(task.id)}>
+              Mark as {task.status === 'pending' ? 'completed' : 'pending'}
+            </button>
             <button className="danger" type="button" onClick={() => onDelete(task.id)}>
               Delete
             </button>

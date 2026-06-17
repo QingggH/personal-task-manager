@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { TaskForm } from '../components/TaskForm';
 import { TaskList } from '../components/TaskList';
 import { useTasks } from '../context/TaskContext';
@@ -6,6 +6,8 @@ import type { TaskFormValues } from '../types';
 
 export function TaskListPage() {
   const { tasks, addTask, deleteTask, toggleTaskStatus } = useTasks();
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [pendingTask, setPendingTask] = useState<TaskFormValues | null>(null);
 
   const stats = useMemo(() => {
     const completed = tasks.filter((task) => task.status === 'completed').length;
@@ -15,7 +17,29 @@ export function TaskListPage() {
   }, [tasks]);
 
   function handleAddTask(values: TaskFormValues) {
-    addTask(values);
+    setPendingTask(values);
+  }
+
+  function handleShowForm() {
+    setIsFormVisible(true);
+  }
+
+  function handleConfirmAddTask() {
+    if (!pendingTask) {
+      return;
+    }
+
+    addTask(pendingTask);
+    setPendingTask(null);
+    setIsFormVisible(false);
+  }
+
+  function handleCancelAddTask() {
+    setPendingTask(null);
+  }
+
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   return (
@@ -24,28 +48,67 @@ export function TaskListPage() {
         <div>
           <p className="eyebrow">Overview</p>
           <h2>Manage tasks in one place.</h2>
-          <p>Use the form below to create new tasks, then edit or delete them from the list.</p>
+          {!isFormVisible ? (
+            <button className="primary hero-cta" type="button" onClick={handleShowForm}>
+              Add a new task
+            </button>
+          ) : null}
         </div>
 
         <div className="stats" aria-label="Task summary">
-          <div>
-            <strong>{stats.total}</strong>
-            <span>Total</span>
+          <div className="stats-line">
+            <span className="badge stats-badge stats-badge--total">Total</span>
+            <strong className="stats-value">{stats.total}</strong>
           </div>
-          <div>
-            <strong>{stats.pending}</strong>
-            <span>Pending</span>
+          <div className="stats-line">
+            <span className="badge stats-badge stats-badge--pending">Pending</span>
+            <strong className="stats-value">{stats.pending}</strong>
           </div>
-          <div>
-            <strong>{stats.completed}</strong>
-            <span>Completed</span>
+          <div className="stats-line">
+            <span className="badge stats-badge stats-badge--completed">Completed</span>
+            <strong className="stats-value">{stats.completed}</strong>
           </div>
         </div>
       </section>
 
-      <TaskForm submitLabel="Add task" onSubmit={handleAddTask} />
+      {isFormVisible ? (
+        <TaskForm
+          submitLabel="Add task"
+          onSubmit={handleAddTask}
+          onCancel={() => setIsFormVisible(false)}
+          inlineSubmitInStatusRow
+          resetAfterSubmit={false}
+        />
+      ) : null}
+
+      {pendingTask ? (
+        <div className="confirm-overlay" role="presentation">
+          <div className="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+            <p className="eyebrow">Confirm</p>
+            <h2 id="confirm-title">Add this new task?</h2>
+            <p>
+              {pendingTask.title
+                ? `This will add "${pendingTask.title}" to your task list.`
+                : 'This will add the new task to your task list.'}
+            </p>
+
+            <div className="confirm-actions">
+              <button className="primary" type="button" onClick={handleConfirmAddTask}>
+                Confirm
+              </button>
+              <button className="secondary confirm-cancel" type="button" onClick={handleCancelAddTask}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <TaskList tasks={tasks} onToggleStatus={toggleTaskStatus} onDelete={deleteTask} />
+
+      <button className="secondary back-to-top" type="button" onClick={scrollToTop} aria-label="Back to top">
+        ↑
+      </button>
     </div>
   );
 }
