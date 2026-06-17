@@ -24,7 +24,9 @@ export function TaskList({ tasks, onToggleStatus, onDelete }: TaskListProps) {
           <div className="task-card__header">
             <div>
               <p className={`badge ${task.status}`}>{task.status}</p>
-              <h2 className="task-card__title">{task.title}</h2>
+              <h2 className="task-card__title" title={task.title}>
+                {task.title}
+              </h2>
             </div>
           </div>
 

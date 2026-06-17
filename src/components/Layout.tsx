@@ -29,6 +29,7 @@ export function Layout({ children }: LayoutProps) {
       </header>
 
       <main className="main">{children}</main>
+
     </div>
   );
 }

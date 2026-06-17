@@ -8,7 +8,6 @@ interface TaskFormProps {
   onSubmit: (values: TaskFormValues) => void;
   onCancel?: () => void;
   inlineSubmitInStatusRow?: boolean;
-  confirmBeforeSubmit?: (values: TaskFormValues) => boolean;
   resetAfterSubmit?: boolean;
 }
 
@@ -24,7 +23,6 @@ export function TaskForm({
   onSubmit,
   onCancel,
   inlineSubmitInStatusRow = false,
-  confirmBeforeSubmit,
   resetAfterSubmit = true,
 }: TaskFormProps) {
   const [values, setValues] = useState<TaskFormValues>(initialValues ?? emptyValues);
@@ -50,6 +48,8 @@ export function TaskForm({
     }
 
     document.addEventListener('pointerdown', handlePointerDown);
+    // `keydown` listeners are typed as the generic Event handler, so cast our
+    // KeyboardEvent handler to satisfy add/removeEventListener's signature.
     document.addEventListener('keydown', handleEscape as unknown as EventListener);
 
     return () => {
@@ -77,10 +77,6 @@ export function TaskForm({
       description: values.description.trim(),
       status: values.status,
     };
-
-    if (confirmBeforeSubmit && !confirmBeforeSubmit(nextValues)) {
-      return;
-    }
 
     onSubmit(nextValues);
 
@@ -155,6 +151,8 @@ export function TaskForm({
               <div className="status-menu" role="listbox" aria-label="Task status">
                 <button
                   type="button"
+                  role="option"
+                  aria-selected={values.status === 'pending'}
                   className={`status-option ${values.status === 'pending' ? 'active' : ''}`}
                   onClick={() => selectStatus('pending')}
                 >
@@ -163,6 +161,8 @@ export function TaskForm({
                 </button>
                 <button
                   type="button"
+                  role="option"
+                  aria-selected={values.status === 'completed'}
                   className={`status-option ${values.status === 'completed' ? 'active' : ''}`}
                   onClick={() => selectStatus('completed')}
                 >

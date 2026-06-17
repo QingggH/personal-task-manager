@@ -35,6 +35,8 @@ function loadTasks(): Task[] {
     const parsed = JSON.parse(storedValue) as Task[];
 
     if (Array.isArray(parsed)) {
+      // Stored data may come from an older or corrupted shape, so keep only the
+      // entries that still match the current Task structure before trusting them.
       const normalized = parsed.filter(
         (task): task is Task =>
           typeof task?.id === 'string' &&

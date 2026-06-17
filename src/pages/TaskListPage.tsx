@@ -45,7 +45,7 @@ export function TaskListPage() {
   return (
     <div className="page-stack">
       <section className="hero card">
-        <div>
+        <div className="hero-left">
           <p className="eyebrow">Overview</p>
           <h2>Manage tasks in one place.</h2>
           {!isFormVisible ? (
@@ -55,18 +55,26 @@ export function TaskListPage() {
           ) : null}
         </div>
 
-        <div className="stats" aria-label="Task summary">
-          <div className="stats-line">
-            <span className="badge stats-badge stats-badge--total">Total</span>
-            <strong className="stats-value">{stats.total}</strong>
-          </div>
-          <div className="stats-line">
-            <span className="badge stats-badge stats-badge--pending">Pending</span>
-            <strong className="stats-value">{stats.pending}</strong>
-          </div>
-          <div className="stats-line">
-            <span className="badge stats-badge stats-badge--completed">Completed</span>
-            <strong className="stats-value">{stats.completed}</strong>
+        <div className="hero-right" aria-label="Task summary">
+          <div className="stats">
+            <span className="badge stats-badge stats-badge--total">
+              <span className="stats-label">
+                <span className="stats-dot" aria-hidden="true"></span>Total
+              </span>
+              <strong className="stats-value">{stats.total}</strong>
+            </span>
+            <span className="badge stats-badge stats-badge--pending">
+              <span className="stats-label">
+                <span className="stats-dot" aria-hidden="true"></span>Pending
+              </span>
+              <strong className="stats-value">{stats.pending}</strong>
+            </span>
+            <span className="badge stats-badge stats-badge--completed">
+              <span className="stats-label">
+                <span className="stats-dot" aria-hidden="true"></span>Completed
+              </span>
+              <strong className="stats-value">{stats.completed}</strong>
+            </span>
           </div>
         </div>
       </section>
